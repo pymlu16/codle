@@ -1,8 +1,10 @@
-import { MAX_WORD_LENGTH } from '../../constants/settings'
 import { Cell } from './Cell'
+type Props = {
+  len: number
+}
 
-export const EmptyRow = () => {
-  const emptyCells = Array.from(Array(MAX_WORD_LENGTH))
+export const EmptyRow = ({ len }: Props) => {
+  const emptyCells = Array.from(Array(len))
 
   return (
     <div className="flex justify-center mb-1">

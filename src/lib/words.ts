@@ -1,8 +1,10 @@
 import { WORDS } from '../constants/wordlist'
+import { CHINESE_WORDS } from '../constants/wordlist'
 import { VALID_GUESSES } from '../constants/validGuesses'
 import { WRONG_SPOT_MESSAGE, NOT_CONTAINED_MESSAGE } from '../constants/strings'
 import { getGuessStatuses } from './statuses'
 import { default as GraphemeSplitter } from 'grapheme-splitter'
+
 
 export const isWordInWordList = (word: string) => {
   return (
@@ -11,21 +13,22 @@ export const isWordInWordList = (word: string) => {
   )
 }
 
-export const isWinningWord = (word: string) => {
+export const isWinningWord = (word: string, solution:string) => {
   return solution === word
 }
+
 
 // build a set of previously revealed letters - present and correct
 // guess must use correct letters in that space and any other revealed letters
 // also check if all revealed instances of a letter are used (i.e. two C's)
-export const findFirstUnusedReveal = (word: string, guesses: string[]) => {
+export const findFirstUnusedReveal = (word: string, guesses: string[], solution:string) => {
   if (guesses.length === 0) {
     return false
   }
 
   const lettersLeftArray = new Array<string>()
   const guess = guesses[guesses.length - 1]
-  const statuses = getGuessStatuses(guess)
+  const statuses = getGuessStatuses(guess, solution)
   const splitWord = unicodeSplit(word)
   const splitGuess = unicodeSplit(guess)
 
@@ -85,8 +88,10 @@ export const getWordOfDay = () => {
   return {
     solution: localeAwareUpperCase(WORDS[index % WORDS.length]),
     solutionIndex: index,
+    chineseSolution: CHINESE_WORDS[index % WORDS.length],
     tomorrow: nextday,
   }
 }
 
-export const { solution, solutionIndex, tomorrow } = getWordOfDay()
+export const { solution, solutionIndex, chineseSolution, tomorrow } =
+  getWordOfDay()

@@ -10,10 +10,12 @@ import {
   NOT_ENOUGH_LETTERS_MESSAGE,
   WORD_NOT_FOUND_MESSAGE,
   CORRECT_WORD_MESSAGE,
+  CORRECT_CHINESE_MESSAGE,
   HARD_MODE_ALERT_MESSAGE,
 } from './constants/strings'
 import {
   MAX_WORD_LENGTH,
+  MAX_CHINESE_LENGTH,
   MAX_CHALLENGES,
   REVEAL_TIME_MS,
   GAME_LOST_INFO_DELAY,
@@ -23,6 +25,7 @@ import {
   isWordInWordList,
   isWinningWord,
   solution,
+  chineseSolution,
   findFirstUnusedReveal,
   unicodeLength,
 } from './lib/words'
@@ -48,6 +51,7 @@ function App() {
   const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
     useAlert()
   const [currentGuess, setCurrentGuess] = useState('')
+  const [currentGuessChinese, setCurrentGuessChinese] = useState('')
   const [isGameWon, setIsGameWon] = useState(false)
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
@@ -65,6 +69,7 @@ function App() {
     getStoredIsHighContrastMode()
   )
   const [isRevealing, setIsRevealing] = useState(false)
+  const [isRevealingChinese, setIsRevealingChinese] = useState(false)
   const [guesses, setGuesses] = useState<string[]>(() => {
     const loaded = loadGameStateFromLocalStorage()
     if (loaded?.solution !== solution) {
@@ -81,6 +86,24 @@ function App() {
       })
     }
     return loaded.guesses
+  })
+
+  const [chineseGuesses, setChineseGuesses] = useState<string[]>(() => {
+    const loaded = loadGameStateFromLocalStorage()
+    if (loaded?.chineseSolution !== chineseSolution) {
+      return []
+    }
+    const gameWasWon = loaded.chineseGuesses.includes(chineseSolution)
+    if (gameWasWon) {
+      setIsGameWon(true)
+    }
+    if (loaded.chineseGuesses.length === MAX_CHALLENGES && !gameWasWon) {
+      setIsGameLost(true)
+      showErrorAlert(CORRECT_WORD_MESSAGE(chineseSolution), {
+        persist: true,
+      })
+    }
+    return loaded.chineseGuesses
   })
 
   const [stats, setStats] = useState(() => loadStats())
@@ -139,8 +162,22 @@ function App() {
   }
 
   useEffect(() => {
-    saveGameStateToLocalStorage({ guesses, solution })
+    saveGameStateToLocalStorage({
+      guesses,
+      solution,
+      chineseGuesses,
+      chineseSolution,
+    })
   }, [guesses])
+
+  useEffect(() => {
+    saveGameStateToLocalStorage({
+      guesses,
+      solution,
+      chineseGuesses,
+      chineseSolution,
+    })
+  }, [chineseGuesses])
 
   useEffect(() => {
     if (isGameWon) {
@@ -171,10 +208,68 @@ function App() {
     }
   }
 
+  const onCharChinese = (value: string) => {
+    if (
+      unicodeLength(`${currentGuessChinese}${value}`) <= MAX_WORD_LENGTH &&
+      chineseGuesses.length < MAX_CHALLENGES &&
+      !isGameWon
+    ) {
+      setCurrentGuessChinese(`${currentGuessChinese}${value}`)
+    }
+  }
+
   const onDelete = () => {
     setCurrentGuess(
       new GraphemeSplitter().splitGraphemes(currentGuess).slice(0, -1).join('')
     )
+  }
+
+  const onDeleteChinese = () => {
+    setCurrentGuessChinese(
+      new GraphemeSplitter()
+        .splitGraphemes(currentGuessChinese)
+        .slice(0, -1)
+        .join('')
+    )
+  }
+  const onEnterChinese = () => {
+    if (isGameWon || isGameLost) {
+      return
+    }
+    setIsRevealingChinese(true)
+    // turn this back off after all
+    // chars have been revealed
+    setTimeout(() => {
+      setIsRevealingChinese(false)
+    }, REVEAL_TIME_MS * MAX_WORD_LENGTH)
+
+    const winningWordChinese = isWinningWord(
+      currentGuessChinese,
+      chineseSolution
+    )
+
+    if (
+      unicodeLength(currentGuessChinese) === MAX_WORD_LENGTH &&
+      chineseGuesses.length < MAX_CHALLENGES &&
+      !isGameWon
+    ) {
+      setChineseGuesses([...chineseGuesses, currentGuessChinese])
+      setCurrentGuessChinese('')
+
+      if (winningWordChinese) {
+        setStats(addStatsForCompletedGame(stats, chineseGuesses.length))
+        return setIsGameWon(true)
+      }
+
+      if (chineseGuesses.length === MAX_CHALLENGES - 1) {
+        setStats(addStatsForCompletedGame(stats, chineseGuesses.length + 1))
+        setIsGameLost(true)
+        showErrorAlert(CORRECT_CHINESE_MESSAGE(chineseSolution), {
+          persist: true,
+          delayMs: REVEAL_TIME_MS * MAX_WORD_LENGTH + 1,
+        })
+      }
+    }
   }
 
   const onEnter = () => {
@@ -196,17 +291,6 @@ function App() {
       })
     }
 
-    // enforce hard mode - all guesses must contain all previously revealed letters
-    if (isHardMode) {
-      const firstMissingReveal = findFirstUnusedReveal(currentGuess, guesses)
-      if (firstMissingReveal) {
-        setCurrentRowClass('jiggle')
-        return showErrorAlert(firstMissingReveal, {
-          onClose: clearCurrentRowClass,
-        })
-      }
-    }
-
     setIsRevealing(true)
     // turn this back off after all
     // chars have been revealed
@@ -214,7 +298,7 @@ function App() {
       setIsRevealing(false)
     }, REVEAL_TIME_MS * MAX_WORD_LENGTH)
 
-    const winningWord = isWinningWord(currentGuess)
+    const winningWord = isWinningWord(currentGuess, solution)
 
     if (
       unicodeLength(currentGuess) === MAX_WORD_LENGTH &&
@@ -239,7 +323,6 @@ function App() {
       }
     }
   }
-
   return (
     <div className="h-screen flex flex-col">
       <Navbar
@@ -247,22 +330,52 @@ function App() {
         setIsStatsModalOpen={setIsStatsModalOpen}
         setIsSettingsModalOpen={setIsSettingsModalOpen}
       />
-      <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow">
-        <div className="pb-6 grow">
-          <Grid
-            guesses={guesses}
-            currentGuess={currentGuess}
-            isRevealing={isRevealing}
-            currentRowClassName={currentRowClass}
-          />
+      <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow"></div>
+      <div className="float-container">
+        <div className="float-child">
+          <div className="pb-6 grow">
+            <label>English</label>
+            <Grid
+              guesses={guesses}
+              currentGuess={currentGuess}
+              isRevealing={isRevealing}
+              currentRowClassName={currentRowClass}
+              len={MAX_WORD_LENGTH}
+              solution={solution}
+            />
+            <Keyboard
+              onChar={onChar}
+              onDelete={onDelete}
+              onEnter={onEnter}
+              guesses={guesses}
+              isRevealing={isRevealing}
+              solution={solution}
+            />
+          </div>
         </div>
-        <Keyboard
-          onChar={onChar}
-          onDelete={onDelete}
-          onEnter={onEnter}
-          guesses={guesses}
-          isRevealing={isRevealing}
-        />
+        <div className="float-child">
+          <div className="pb-6 grow">
+            <label>Chinese Pinyin</label>
+            <Grid
+              guesses={chineseGuesses}
+              currentGuess={currentGuessChinese}
+              isRevealing={isRevealingChinese}
+              currentRowClassName={currentRowClass}
+              len={MAX_CHINESE_LENGTH}
+              solution={chineseSolution}
+            />
+            <Keyboard
+              onChar={onCharChinese}
+              onDelete={onDeleteChinese}
+              onEnter={onEnterChinese}
+              guesses={chineseGuesses}
+              isRevealing={isRevealingChinese}
+              solution={chineseSolution}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow">
         <InfoModal
           isOpen={isInfoModalOpen}
           handleClose={() => setIsInfoModalOpen(false)}
@@ -274,6 +387,7 @@ function App() {
           gameStats={stats}
           isGameLost={isGameLost}
           isGameWon={isGameWon}
+          solution={solution}
           handleShareToClipboard={() => showSuccessAlert(GAME_COPIED_MESSAGE)}
           isHardMode={isHardMode}
           isDarkMode={isDarkMode}

@@ -19,6 +19,7 @@ type Props = {
   gameStats: GameStats
   isGameLost: boolean
   isGameWon: boolean
+  solution: string
   handleShareToClipboard: () => void
   isHardMode: boolean
   isDarkMode: boolean
@@ -33,6 +34,7 @@ export const StatsModal = ({
   gameStats,
   isGameLost,
   isGameWon,
+  solution,
   handleShareToClipboard,
   isHardMode,
   isDarkMode,
@@ -84,6 +86,7 @@ export const StatsModal = ({
                 isHardMode,
                 isDarkMode,
                 isHighContrastMode,
+                solution,
                 handleShareToClipboard
               )
             }}

@@ -15,13 +15,18 @@ export const shareStatus = (
   isHardMode: boolean,
   isDarkMode: boolean,
   isHighContrastMode: boolean,
+  solution: string,
   handleShareToClipboard: () => void
 ) => {
   const textToShare =
     `${GAME_TITLE} ${solutionIndex} ${
       lost ? 'X' : guesses.length
     }/${MAX_CHALLENGES}${isHardMode ? '*' : ''}\n\n` +
-    generateEmojiGrid(guesses, getEmojiTiles(isDarkMode, isHighContrastMode))
+    generateEmojiGrid(
+      guesses,
+      getEmojiTiles(isDarkMode, isHighContrastMode),
+      solution
+    )
 
   const shareData = { text: textToShare }
 
@@ -42,10 +47,14 @@ export const shareStatus = (
   }
 }
 
-export const generateEmojiGrid = (guesses: string[], tiles: string[]) => {
+export const generateEmojiGrid = (
+  guesses: string[],
+  tiles: string[],
+  solution: string
+) => {
   return guesses
     .map((guess) => {
-      const status = getGuessStatuses(guess)
+      const status = getGuessStatuses(guess, solution)
       const splitGuess = unicodeSplit(guess)
 
       return splitGuess

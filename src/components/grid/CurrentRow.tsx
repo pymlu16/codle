@@ -5,11 +5,12 @@ import { unicodeSplit } from '../../lib/words'
 type Props = {
   guess: string
   className: string
+  len: number
 }
 
-export const CurrentRow = ({ guess, className }: Props) => {
+export const CurrentRow = ({ guess, className, len }: Props) => {
   const splitGuess = unicodeSplit(guess)
-  const emptyCells = Array.from(Array(MAX_WORD_LENGTH - splitGuess.length))
+  const emptyCells = Array.from(Array(len - splitGuess.length))
   const classes = `flex justify-center mb-1 ${className}`
 
   return (
