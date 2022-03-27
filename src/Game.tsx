@@ -43,11 +43,13 @@ type Props = {
 export const Game = ({ language, solution, definition }: Props) => {
   const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
     useAlert()
+  const [buttonName, setButtonName] = useState('Show Definition')
   const [currentGuess, setCurrentGuess] = useState('')
   const [currentRowClass, setCurrentRowClass] = useState('')
   const [isRevealing, setIsRevealing] = useState(false)
   const [isGameWon, setIsGameWon] = useState(false)
   const [isGameLost, setIsGameLost] = useState(false)
+  const [revealDefinition, setRevealDefinition] = useState(false)
   const [guesses, setGuesses] = useState<string[]>(() => {
     const loaded = loadGameStateFromLocalStorage()
     if (loaded?.solution !== solution) {
@@ -176,10 +178,27 @@ export const Game = ({ language, solution, definition }: Props) => {
       }
     }
   }
+
+  const submitForm = (event: React.FormEvent<HTMLFormElement>) => {
+    // Preventing the page from reloading
+    event.preventDefault()
+    setRevealDefinition(!revealDefinition)
+    if (!revealDefinition) {
+      setButtonName('Hide Definition')
+    } else {
+      setButtonName('Show Definition')
+    }
+  }
   return (
     <div className="h-screen flex flex-col">
       <div className="pb-6 grow">
         <label>{language}</label>
+        <form onSubmit={submitForm}>
+          <button type="submit" className="btn">
+            {buttonName}
+          </button>
+        </form>
+        <div> {revealDefinition && <p> {definition}</p>}</div>
         <Grid
           guesses={guesses}
           currentGuess={currentGuess}
