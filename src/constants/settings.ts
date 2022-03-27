@@ -1,7 +1,6 @@
-import { solution, chineseSolution } from '../lib/words'
+import { solution } from '../lib/words'
 
 export const MAX_WORD_LENGTH = solution.length
-export const MAX_CHINESE_LENGTH = chineseSolution.length
 export const MAX_CHALLENGES = 3
 export const ALERT_TIME_MS = 2000
 export const REVEAL_TIME_MS = 350

@@ -5,24 +5,16 @@
 :root {
   --animation-speed: 1000ms;
   --animation-speed-fast: 250ms;
-  --default-cell-bg-color: theme('colors.white');
+  --default-cell-bg-color: theme('colors.black');
   --default-cell-border-color: theme('colors.black');
   --default-cell-text-color: theme('colors.black');
   --absent-cell-bg-color: theme('colors.slate.400');
   --correct-cell-bg-color: theme('colors.green.400');
   --present-cell-bg-color: theme('colors.yellow.400');
 }
-
-.dark {
-  --default-cell-bg-color: theme('colors.slate.900');
-  --default-cell-border-color: theme('colors.white');
-  --default-cell-text-color: theme('colors.white');
-  --absent-cell-bg-color: theme('colors.slate.700');
-}
-
-.high-contrast {
-  --correct-cell-bg-color: theme('colors.orange.400');
-  --present-cell-bg-color: theme('colors.cyan.400');
+body {
+  background-color: black;
+  color: #39ff14;
 }
 
 .cell-fill-animation {
@@ -66,6 +58,11 @@ svg.cursor-pointer:hover {
   animation-duration: var(--animation-speed-fast);
 }
 
+.langaugesform {
+  width: auto;
+  margin: auto;
+}
+
 .navbar {
   margin-bottom: 2%;
 }
@@ -79,6 +76,14 @@ svg.cursor-pointer:hover {
 
 .right-icons {
   display: flex;
+}
+
+.logo {
+  display: flex;
+  width: auto;
+  padding-top: 20px;
+  margin: auto;
+  height: 15%;
 }
 
 @keyframes revealAbsentCharCell {
@@ -191,13 +196,13 @@ svg.cursor-pointer:hover {
 }
 
 .float-container {
-  border: 3px solid #fff;
   padding: 20px;
+  float: center;
 }
 
 .float-child {
-  width: 50%;
+  width: 30%;
   float: left;
-  padding: 20px;
-  border: 2px solid red;
+  padding: 10px;
+  border: 2px;
 }

@@ -1,21 +1,20 @@
+import { useAlert } from './context/AlertContext'
 import { useState, useEffect } from 'react'
 import { Grid } from './components/grid/Grid'
 import { Keyboard } from './components/keyboard/Keyboard'
 import { InfoModal } from './components/modals/InfoModal'
 import { StatsModal } from './components/modals/StatsModal'
 import { SettingsModal } from './components/modals/SettingsModal'
+import { AlertContainer } from './components/alerts/AlertContainer'
 import {
   WIN_MESSAGES,
   GAME_COPIED_MESSAGE,
   NOT_ENOUGH_LETTERS_MESSAGE,
   WORD_NOT_FOUND_MESSAGE,
   CORRECT_WORD_MESSAGE,
-  CORRECT_CHINESE_MESSAGE,
-  HARD_MODE_ALERT_MESSAGE,
+  DEFINITION_MESSAGE,
 } from './constants/strings'
 import {
-  MAX_WORD_LENGTH,
-  MAX_CHINESE_LENGTH,
   MAX_CHALLENGES,
   REVEAL_TIME_MS,
   GAME_LOST_INFO_DELAY,
@@ -25,8 +24,6 @@ import {
   isWordInWordList,
   isWinningWord,
   solution,
-  chineseSolution,
-  findFirstUnusedReveal,
   unicodeLength,
 } from './lib/words'
 import { addStatsForCompletedGame, loadStats } from './lib/stats'
@@ -40,15 +37,17 @@ import { default as GraphemeSplitter } from 'grapheme-splitter'
 type Props = {
   language: string
   solution: string
+  definition: string
 }
 
-export const Game = ({ language, solution }: Props) => {
+export const Game = ({ language, solution, definition }: Props) => {
   const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
     useAlert()
   const [currentGuess, setCurrentGuess] = useState('')
   const [currentRowClass, setCurrentRowClass] = useState('')
   const [isRevealing, setIsRevealing] = useState(false)
   const [isGameWon, setIsGameWon] = useState(false)
+  const [isGameLost, setIsGameLost] = useState(false)
   const [guesses, setGuesses] = useState<string[]>(() => {
     const loaded = loadGameStateFromLocalStorage()
     if (loaded?.solution !== solution) {
@@ -57,16 +56,28 @@ export const Game = ({ language, solution }: Props) => {
     const gameWasWon = loaded.guesses.includes(solution)
     if (gameWasWon) {
       setIsGameWon(true)
+      showErrorAlert(DEFINITION_MESSAGE(solution, definition), {
+        persist: true,
+      })
     }
     if (loaded.guesses.length === MAX_CHALLENGES && !gameWasWon) {
       setIsGameLost(true)
       showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
+        persist: false,
+      })
+      showErrorAlert(DEFINITION_MESSAGE(solution, definition), {
         persist: true,
       })
     }
     return loaded.guesses
   })
   const [stats, setStats] = useState(() => loadStats())
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
+  const clearCurrentRowClass = () => {
+    setCurrentRowClass('')
+  }
   useEffect(() => {
     // if no game state on load,
     // show the user the how-to info modal
@@ -81,14 +92,18 @@ export const Game = ({ language, solution }: Props) => {
       guesses,
       solution,
     })
-  }, [guesses])
+  }, [guesses, solution])
 
   useEffect(() => {
     if (isGameWon) {
+      console.log('game won')
       const winMessage =
         WIN_MESSAGES[Math.floor(Math.random() * WIN_MESSAGES.length)]
-      const delayMs = REVEAL_TIME_MS * MAX_WORD_LENGTH
-
+      const delayMs = REVEAL_TIME_MS * solution.length
+      showSuccessAlert(DEFINITION_MESSAGE(solution, definition), {
+        delayMs,
+        persist: true,
+      })
       showSuccessAlert(winMessage, {
         delayMs,
         onClose: () => setIsStatsModalOpen(true),
@@ -104,7 +119,7 @@ export const Game = ({ language, solution }: Props) => {
 
   const onChar = (value: string) => {
     if (
-      unicodeLength(`${currentGuess}${value}`) <= MAX_WORD_LENGTH &&
+      unicodeLength(`${currentGuess}${value}`) <= solution.length &&
       guesses.length < MAX_CHALLENGES &&
       !isGameWon
     ) {
@@ -122,16 +137,9 @@ export const Game = ({ language, solution }: Props) => {
       return
     }
 
-    if (!(unicodeLength(currentGuess) === MAX_WORD_LENGTH)) {
+    if (!(unicodeLength(currentGuess) === solution.length)) {
       setCurrentRowClass('jiggle')
       return showErrorAlert(NOT_ENOUGH_LETTERS_MESSAGE, {
-        onClose: clearCurrentRowClass,
-      })
-    }
-
-    if (!isWordInWordList(currentGuess)) {
-      setCurrentRowClass('jiggle')
-      return showErrorAlert(WORD_NOT_FOUND_MESSAGE, {
         onClose: clearCurrentRowClass,
       })
     }
@@ -162,35 +170,49 @@ export const Game = ({ language, solution }: Props) => {
         setStats(addStatsForCompletedGame(stats, guesses.length + 1))
         setIsGameLost(true)
         showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
-          persist: true,
+          persist: false,
           delayMs: REVEAL_TIME_MS * solution.length + 1,
         })
       }
     }
   }
   return (
-    <div className="float-container">
-      <div className="float-child">
-        <div className="pb-6 grow">
-          <label>{language}</label>
-          <Grid
-            guesses={guesses}
-            currentGuess={currentGuess}
-            isRevealing={isRevealing}
-            currentRowClassName={currentRowClass}
-            len={solution.length}
-            solution={solution}
-          />
-          <Keyboard
-            onChar={onChar}
-            onDelete={onDelete}
-            onEnter={onEnter}
-            guesses={guesses}
-            isRevealing={isRevealing}
-            solution={solution}
-          />
-        </div>
+    <div className="h-screen flex flex-col">
+      <div className="pb-6 grow">
+        <label>{language}</label>
+        <Grid
+          guesses={guesses}
+          currentGuess={currentGuess}
+          isRevealing={isRevealing}
+          currentRowClassName={currentRowClass}
+          len={solution.length}
+          solution={solution}
+        />
+        <Keyboard
+          onChar={onChar}
+          onDelete={onDelete}
+          onEnter={onEnter}
+          guesses={guesses}
+          isRevealing={isRevealing}
+          solution={solution}
+        />
       </div>
+      <InfoModal
+        isOpen={isInfoModalOpen}
+        handleClose={() => setIsInfoModalOpen(false)}
+      />
+      <StatsModal
+        isOpen={isStatsModalOpen}
+        handleClose={() => setIsStatsModalOpen(false)}
+        guesses={guesses}
+        gameStats={stats}
+        isGameLost={isGameLost}
+        isGameWon={isGameWon}
+        solution={solution}
+        handleShareToClipboard={() => showSuccessAlert(GAME_COPIED_MESSAGE)}
+        numberOfGuessesMade={guesses.length}
+      />
+      <AlertContainer />
     </div>
   )
 }

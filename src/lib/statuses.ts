@@ -9,6 +9,7 @@ export const getStatuses = (
   const splitSolution = unicodeSplit(solution)
 
   guesses.forEach((word) => {
+    console.log(splitSolution)
     unicodeSplit(word).forEach((letter, i) => {
       if (!splitSolution.includes(letter)) {
         // make status absent
@@ -16,7 +17,6 @@ export const getStatuses = (
       }
 
       if (letter === splitSolution[i]) {
-        //make status correct
         return (charObj[letter] = 'correct')
       }
 
@@ -43,6 +43,8 @@ export const getGuessStatuses = (
 
   // handle all correct cases first
   splitGuess.forEach((letter, i) => {
+    console.log(letter)
+    console.log(splitSolution[i])
     if (letter === splitSolution[i]) {
       statuses[i] = 'correct'
       solutionCharsTaken[i] = true
