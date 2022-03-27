@@ -42,37 +42,40 @@ function App() {
   return (
     <div className="h-screen flex flex-col">
       <img className="logo" src={logo} alt="Logo" />
-      <span className="languagesform">
+      <div className="languagesform">
         <form onSubmit={submitForm}>
-          <h1>Select your languages for Codle!</h1>
+          <h1 font-weight="bold">Select your languages for Codle!</h1>
           {/* ------------------------------------------------ */}
-          <div>
+          <div className="checkbox">
             <Checkbox
               handleChange={handleChangeEng}
               isChecked={isCheckedEng}
               label="English"
             />
           </div>
-          <div>
+          <div className="checkbox">
             <Checkbox
               handleChange={handleChangeCh}
               isChecked={isCheckedCh}
               label="Chinese Pinyin"
             />
           </div>
-          <div>
+          <div className="checkbox">
             <Checkbox
               handleChange={handleChangeSp}
               isChecked={isCheckedSp}
               label="Spanish"
             />
           </div>
-          <button type="submit" className="btn">
+          <button
+            type="submit"
+            className="bg-white hover:bg-gray-100 text-green-400 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+          >
             Done
           </button>
         </form>
-      </span>
-      <div className="h-screen flex flex-col">
+      </div>
+      <div className="h-screen flex-col">
         <div className="float-container">
           <div className="float-child">
             <div>

@@ -43,6 +43,8 @@ type Props = {
 export const Game = ({ language, solution, definition }: Props) => {
   const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
     useAlert()
+  const translate = require('translate-google-api')
+  const [sols, setSols] = useState(solution)
   const [buttonName, setButtonName] = useState('Show Definition')
   const [currentGuess, setCurrentGuess] = useState('')
   const [currentRowClass, setCurrentRowClass] = useState('')
@@ -80,6 +82,25 @@ export const Game = ({ language, solution, definition }: Props) => {
   const clearCurrentRowClass = () => {
     setCurrentRowClass('')
   }
+
+  const translateSolution = async (language: string): Promise<string> => {
+    const result = await translate(solution, {
+      tld: 'en',
+      to: language,
+    })
+
+    return result
+  }
+  translateSolution(language).then((value) => {
+    const str: string = value
+    setSols(str)
+  })
+
+  const trans = () => {
+    translateSolution(language)
+    console.log(sols)
+    return sols
+  }
   useEffect(() => {
     // if no game state on load,
     // show the user the how-to info modal
@@ -87,8 +108,9 @@ export const Game = ({ language, solution, definition }: Props) => {
       setTimeout(() => {
         setIsInfoModalOpen(true)
       }, WELCOME_INFO_MODAL_MS)
+      translateSolution(language)
     }
-  }, [])
+  }, [language, translateSolution(language)])
   useEffect(() => {
     saveGameStateToLocalStorage({
       guesses,
@@ -204,8 +226,8 @@ export const Game = ({ language, solution, definition }: Props) => {
           currentGuess={currentGuess}
           isRevealing={isRevealing}
           currentRowClassName={currentRowClass}
-          len={solution.length}
-          solution={solution}
+          len={trans().length}
+          solution={trans()}
         />
         <Keyboard
           onChar={onChar}

@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Rubik&display=swap');
 
 :root {
   --animation-speed: 1000ms;
@@ -14,6 +15,11 @@
 }
 body {
   background-color: black;
+  font-family: 'Rubik', sans-serif;
+}
+
+h1 {
+  font-weight: bold;
 }
 
 form {
@@ -67,11 +73,6 @@ svg.cursor-pointer:hover {
   animation-duration: var(--animation-speed-fast);
 }
 
-.langaugesform {
-  width: auto;
-  margin: auto;
-}
-
 .navbar {
   margin-bottom: 2%;
 }
@@ -93,6 +94,11 @@ svg.cursor-pointer:hover {
   padding-top: 20px;
   margin: auto;
   height: 15%;
+}
+
+.checkbox {
+  margin: auto 0;
+  padding: 20 0 20;
 }
 
 @keyframes revealAbsentCharCell {
@@ -203,9 +209,15 @@ svg.cursor-pointer:hover {
     transform: translate(0, 0);
   }
 }
+form {
+  border-radius: 20px;
+  border-style: dotted;
+  border-color: #39ff14;
+}
 
 .float-container {
   float: center;
+  align-items: center;
 }
 
 .float-child {
