@@ -5,4 +5,4 @@ An educational multi-language, varying length clone of Wordle made specifically 
 Download codle and run npm start to play!
 
 
-Source code from: https://github.com/cwackerfuss/react-wordle
+Wordle template code from: https://github.com/cwackerfuss/react-wordle
